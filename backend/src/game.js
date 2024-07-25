@@ -7,7 +7,7 @@ export class Game {
   player1;
   player2;
   board;
-  moves;
+  // moves;
   #starttime;
 
   constructor(socket1, socket2) {
@@ -35,23 +35,36 @@ export class Game {
 
   makemove(socket, move) {
     // validate
-    if (this.board.moves.lenght % 2 === 0 && socket !== this.player1) {
+    console.log("bruh", this.board.history().length % 2);
+    if (this.board.history().length % 2 === 0 && socket !== this.player1) {
+      console.log("return1");
       return;
     }
-    if (this.board.moves.lenght % 2 === 1 && socket !== this.player2) {
+    if (this.board.history().length % 2 === 1 && socket !== this.player2) {
+      console.log("return2");
       return;
     }
-
+    console.log("not returned");
     //make move and update board
     try {
       this.board.move(move);
     } catch (e) {
+      console.log(e);
       return;
     }
+    console.log("moved");
     //push moves
     //check-/mate status of game
     if (this.board.isGameOver()) {
-      this.player1.emit(
+      this.player1.send(
+        JSON.stringify({
+          type: GAME_OVER,
+          payload: {
+            winner: this.board.turn() === "w" ? "black" : "white",
+          },
+        })
+      );
+      this.player2.send(
         JSON.stringify({
           type: GAME_OVER,
           payload: {
@@ -61,15 +74,19 @@ export class Game {
       );
       return;
     }
-    if (this.board.moves.length % 2 === 0) {
-      this.player2.emit(
+    console.log(this.board.history().length % 2);
+
+    if (this.board.history().length % 2 === 0) {
+      console.log("sent1");
+      this.player1.send(
         JSON.stringify({
           type: MOVE,
           payload: move,
         })
       );
     } else {
-      this.player1.emit(
+      console.log("sent2");
+      this.player2.send(
         JSON.stringify({
           type: MOVE,
           payload: move,

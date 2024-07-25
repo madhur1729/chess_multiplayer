@@ -35,11 +35,12 @@ export class gameManager {
         }
       }
       if (message.type === MOVE) {
+        console.log("bro");
         const game = this.games.find(
           (game) => game.player1 === socket || game.player2 === socket
         );
         if (game) {
-          game.makemove(message.move);
+          game.makemove(socket, message.move);
         }
       }
     });
