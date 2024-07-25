@@ -1,13 +1,6 @@
-// interface Game {
-//   id: Number;
-//   name: String;
-//   players1: WebSocket;
-//   players2: WebSocket;
-// }
-
-// interface Users {
-//   id: Number;
-// }
+import { Chess } from "chess.js";
+import { INIT_GAME, MOVE, GAME_OVER } from "./messages.js";
+import { Game } from "./game.js";
 
 export class gameManager {
   #games /*: Game[]*/;
@@ -17,11 +10,12 @@ export class gameManager {
   constructor() {
     this.games = [];
     this.users = [];
-    this.pendinguser = NULL;
+    this.pendinguser = null;
   }
 
   addUser(socket /*: WebSocket*/) {
     this.users.push(socket);
+    this.#addHandler(socket);
   }
 
   removeUser(socket /*: WebSocket*/) {
@@ -30,17 +24,23 @@ export class gameManager {
 
   #addHandler(socket) {
     socket.on("message", (data) => {
-      const message = JSON.parse(data.tostring());
+      const message = JSON.parse(data.toString());
       if (message.type === INIT_GAME) {
         if (this.pendinguser) {
-          const newgame = new Game(this.#pendinguser, socket);
+          const newgame = new Game(this.pendinguser, socket);
           this.games.push(newgame);
-          this.pendinguser = NULL;
+          this.pendinguser = null;
         } else {
           this.pendinguser = socket;
         }
       }
       if (message.type === MOVE) {
+        const game = this.games.find(
+          (game) => game.player1 === socket || game.player2 === socket
+        );
+        if (game) {
+          game.makemove(message.move);
+        }
       }
     });
   }
